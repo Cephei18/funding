@@ -1,0 +1,21 @@
+{
+  "name": "funding",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --workspace frontend run dev",
+    "build": "npm --workspace frontend run build",
+    "frontend": "npm --workspace frontend run dev",
+    "contracts:build": "npm --workspace contracts run build",
+    "contracts:test": "npm --workspace contracts run test",
+    "contracts:deploy:local": "npm --workspace contracts run deploy:local"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "workspaces": [
+    "contracts",
+    "frontend"
+  ]
+}
