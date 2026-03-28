@@ -175,13 +175,4 @@ From repository root:
 - npm run contracts:test
 - npm run contracts:deploy:local
 
-## Operational Troubleshooting
 
-- MetaMask missing:
-  - Install MetaMask and refresh frontend
-- Wrong network:
-  - Switch wallet to Sepolia
-- Funding fails with revert:
-  - Ensure value > 0 and contract address is valid
-- Contract reads fail:
-  - Verify VITE_FUNDING_CONTRACT_ADDRESS and that ABI artifacts exist
