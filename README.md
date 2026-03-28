@@ -1,79 +1,187 @@
-# Funding dApp Starter
+# Decentralized Crowd Funding
 
-Monorepo with:
+Monorepo for an Ethereum crowdfunding dApp using a Solidity smart contract and a React frontend.
 
-- Hardhat smart contracts
-- React + Vite frontend
-- ethers.js wallet and contract interactions
+## Technical Overview
 
-## Structure
+- Contract runtime: Hardhat + Ethers
+- Contract language: Solidity 0.8.24
+- Frontend runtime: Vite + React
+- Web3 client: ethers v6
+- Monorepo: npm workspaces
 
-- contracts: Solidity source, tests, and deploy script
-- frontend: dApp UI
+The application supports:
+- Wallet connection (MetaMask)
+- On-chain funding via payable transaction
+- Contract balance withdrawal by owner only
+- Read path for cumulative funded amount
 
-## Quick Start
+## Repository Layout
 
-1. Install dependencies:
+```text
+.
+├─ contracts/
+│  ├─ contracts/Funding.sol
+│  ├─ scripts/deploy.js
+│  ├─ test/Funding.js
+│  └─ hardhat.config.js
+├─ frontend/
+│  ├─ src/App.jsx
+│  └─ .env.example
+├─ package.json
+└─ README.md
+```
 
-   ```bash
-   npm install
-   ```
+## Smart Contract Specification
 
-2. Build contracts (generates ABI artifact used by frontend):
+Contract: Funding
 
-   ```bash
-   npm run contracts:build
-   ```
+State:
+- owner (immutable address): deployer and withdraw authority
+- totalFunded (uint256): cumulative ETH funded over contract lifetime
 
-3. Run tests:
+Events:
+- Funded(address indexed funder, uint256 amount)
+- Withdrawn(address indexed to, uint256 amount)
 
-   ```bash
-   npm run contracts:test
-   ```
+External Functions:
+- fund() payable
+  - Requires msg.value > 0
+  - Increments totalFunded
+  - Emits Funded
+- lifetimeFunded() view returns (uint256)
+  - Alias for totalFunded
+- withdraw(address payable to)
+  - Only callable by owner
+  - Rejects zero address recipient
+  - Withdraws full contract balance to recipient
+  - Emits Withdrawn
 
-4. Start frontend:
+Security and behavior constraints:
+- Access control enforced in withdraw
+- No partial withdrawals (always full balance)
+- Withdrawal uses call and reverts on transfer failure
 
-   ```bash
-   npm run dev
-   ```
+## Test Coverage
 
-## Deploy
+Current tests in contracts/test/Funding.js validate:
+- Funding increases totalFunded and lifetimeFunded
+- Zero-value funding is rejected
+- Owner can withdraw and recipient receives full balance
+- Non-owner withdraw is rejected
+- Zero-address recipient is rejected
+- Withdraw with empty balance is rejected
 
-### Local
+Run tests:
 
-1. Start local node:
+```bash
+npm run contracts:test
+```
 
-   ```bash
-   cd contracts
-   npx hardhat node
-   ```
+## Prerequisites
 
-2. Deploy:
+- Node.js 18+
+- npm 9+
+- MetaMask browser extension (for frontend interaction)
 
-   ```bash
-   npm run contracts:deploy:local
-   ```
+## Installation
 
-3. Set frontend contract address in frontend/.env:
+```bash
+npm install
+```
 
-   ```env
-   VITE_FUNDING_CONTRACT_ADDRESS=0xYourContractAddress
-   ```
+## Development Workflow
 
-### Sepolia
+1. Compile contracts and generate artifacts/ABI:
 
-1. Copy contracts/.env.example to contracts/.env
-2. Fill values:
-   - SEPOLIA_RPC_URL
-   - PRIVATE_KEY
+```bash
+npm run contracts:build
+```
+
+2. Run contract tests:
+
+```bash
+npm run contracts:test
+```
+
+3. Start frontend:
+
+```bash
+npm run dev
+```
+
+Frontend default dev endpoint: http://127.0.0.1:5173
+
+## Local Deployment
+
+Terminal A:
+
+```bash
+cd contracts
+npx hardhat node
+```
+
+Terminal B:
+
+```bash
+npm run contracts:deploy:local
+```
+
+After deploy, set frontend contract address in frontend/.env:
+
+```env
+VITE_FUNDING_CONTRACT_ADDRESS=0xYourDeployedContractAddress
+```
+
+## Sepolia Deployment
+
+1. Copy environment template:
+
+```bash
+copy contracts\\.env.example contracts\\.env
+```
+
+2. Configure contracts/.env:
+- SEPOLIA_RPC_URL
+- PRIVATE_KEY
+
 3. Deploy:
 
-   ```bash
-   cd contracts
-   npx hardhat run scripts/deploy.js --network sepolia
-   ```
+```bash
+cd contracts
+npx hardhat run scripts/deploy.js --network sepolia
+```
 
-## Notes
+4. Set frontend/.env:
 
-- Frontend enforces Sepolia for funding transactions.
-- Frontend imports ABI directly from contracts artifacts via workspace package dependency.
+```env
+VITE_FUNDING_CONTRACT_ADDRESS=0xYourSepoliaContractAddress
+```
+
+## Frontend-Contract Integration Notes
+
+- Frontend imports ABI from contracts artifacts:
+  - contracts/artifacts/contracts/Funding.sol/Funding.json
+- Allowed chain is hardcoded to Sepolia chain id 11155111
+- Funding action is blocked when wallet is not connected or wrong network
+
+## NPM Workspace Scripts
+
+From repository root:
+
+- npm run dev
+- npm run build
+- npm run contracts:build
+- npm run contracts:test
+- npm run contracts:deploy:local
+
+## Operational Troubleshooting
+
+- MetaMask missing:
+  - Install MetaMask and refresh frontend
+- Wrong network:
+  - Switch wallet to Sepolia
+- Funding fails with revert:
+  - Ensure value > 0 and contract address is valid
+- Contract reads fail:
+  - Verify VITE_FUNDING_CONTRACT_ADDRESS and that ABI artifacts exist
